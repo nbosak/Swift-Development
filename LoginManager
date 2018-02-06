@@ -1,0 +1,60 @@
+import UIKit
+
+import Foundation
+
+public class LoginManager: LoginService, Attemptable {
+	
+	// Attemptable
+	public var attemptType: AttemptType { return .login }
+	
+	// Push Service
+	public var pushSettings = [PushMessageType: Bool]()
+	
+	public var strikes: Int = 0 {
+		didSet {
+			if strikes > maxStrikes { strikes = maxStrikes }
+			if strikes < 0 { strikes = 0 }
+		}
+	}
+	
+	public init() { /* Need this for public access */ }
+}
+
+extension LoginManager: PushService {
+	
+	public func registerPush(withKey key: String, success: ((_ deviceId: String) -> Void)? = nil, error: (() -> Void)? = nil ) {
+		
+		print("PUSH: LoginManager: RegisterPush")
+		
+		guard let endpoint = UserDefaults.standard.string(forKey: Defaults.pushEndpoint),
+			!key.isEmpty else { error?(); return }
+		
+		pushClient.savePushEndpoint(userHash: key, pushEndpoint: endpoint) { result in
+			
+			self.serviceLog.log(.debug, "API Result: \(result)")
+			
+			switch result {
+				
+			case .success(_, let body):
+				
+				guard let deviceId = body["deviceId"] as? String else {
+					DispatchQueue.main.async { error?() }
+					return
+				}
+				
+				UserDefaults.standard.set(deviceId, forKey: Defaults.pushDeviceId)
+				
+				print("LoginManager: Device ID: \(UserDefaults.standard.string(forKey: Defaults.pushDeviceId))")
+				
+				DispatchQueue.main.async { success?(deviceId) }
+				
+			case .failure(_, _):
+				DispatchQueue.main.async { error?() }
+			case .error(_):
+				DispatchQueue.main.async { error?() }
+			}
+		}
+	}
+}
+
+
