@@ -1,0 +1,27 @@
+import UIKit
+
+public protocol PushHandler: class {
+	func checkForNotification()
+	func clearStoredNotifications()
+}
+
+extension PushHandler where Self: UIViewController {
+	
+	func checkForNotification() {
+		
+		let bodyKey = Keys.Notifications.alertBodyKey
+		let titleKey = Keys.Notifications.alertTitleKey
+		
+		guard let body = UserDefaults.standard.object(forKey: bodyKey) as? String else { return }
+		let title = UserDefaults.standard.object(forKey: titleKey) as? String ?? Strings.alert.localized
+		
+		clearStoredNotifications()
+		alert(title: title, message: body)
+	}
+	
+	func clearStoredNotifications() {
+		UserDefaults.standard.removeObject(forKey: Keys.Notifications.alertTitleKey)
+		UserDefaults.standard.removeObject(forKey: Keys.Notifications.alertBodyKey)
+	}
+}
+
