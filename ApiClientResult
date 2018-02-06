@@ -1,0 +1,44 @@
+import UIKit
+
+public enum ApiClientResult {
+	case success(statusCode: Int, responseBody: [String: Any])
+	case failure(statusCode: Int, statusMessage: String)
+	case error(Error)
+}
+
+// MARK: - Logging Support
+extension ApiClientResult: CustomStringConvertible, CustomDebugStringConvertible {
+	public var description: String {
+		switch self {
+		case .success(_, _):
+			return "Success"
+		case .failure(_, _):
+			return "Failure"
+		case .error(_):
+			return "Error"
+		}
+	}
+	
+	public var debugDescription: String {
+		return self.description
+	}
+}
+
+extension ApiClientResult: Equatable {}
+
+public func ==(lhs: ApiClientResult, rhs: ApiClientResult) -> Bool {
+	switch (lhs, rhs) {
+	case (.success(let lhsCode, let lhsRes), .success(let rhsCode, let rhsRes)):
+		return lhsCode == rhsCode && NSDictionary(dictionary: lhsRes).isEqual(to: rhsRes)
+		
+	case (.failure(let lhsCode, let lhsMsg), .failure(let rhsCode, let rhsMsg)):
+		return lhsCode == rhsCode && lhsMsg == rhsMsg
+		
+	case (.error(let lhsErr), .error(let rhsErr)):
+		return lhsErr.localizedDescription == rhsErr.localizedDescription
+		
+	default:
+		return false
+	}
+}
+
