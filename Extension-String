@@ -1,0 +1,113 @@
+import Foundation
+import UIKit
+
+extension String {
+	
+	func maskRange(with char: Character, startOffset: Int, endOffset: Int) -> String {
+		
+		let count = self.characters.count
+		var chars = self.characters
+		var maskString = ""
+		
+		for i in 0..<count {
+			guard let selfChar = chars.popFirst() else { continue }
+			
+			if i < startOffset || i >= (count - endOffset) {
+				maskString.append(selfChar)
+			} else {
+				maskString.append(char)
+			}
+		}
+		
+		return maskString
+		
+	}
+	
+	func insert(seperator: Character, every interval: Int, from start: Int = 0) -> String? {
+		var result = self
+		var insertionPoint = -1
+		
+		for i in stride(from: start, to: self.characters.count, by: interval) {
+			guard i > 0 else { continue }
+			insertionPoint += interval + 1
+			result.insert(seperator, at: result.index(result.startIndex, offsetBy: insertionPoint))
+		}
+		
+		return result
+		
+	}
+	
+	func attributeSubstring(_ sub: String, attributes: [String: Any]?) -> NSAttributedString {
+		
+		let attrStr = NSMutableAttributedString(string: self, attributes: [:])
+		let ns = self as NSString
+		let range = ns.range(of: sub)
+		
+		guard range.length > 0 else { return attrStr }
+		
+		attrStr.setAttributes(attributes, range: range)
+		
+		return attrStr
+	}
+	
+	func pluralize(count: Int) -> String {
+		return count > 1 ? self+"s" : self
+	}
+	
+	func localize(comment: String) -> String {
+		return NSLocalizedString(self, comment: comment)
+	}
+	
+	var localized: String {
+		return NSLocalizedString(self, comment: "")
+	}
+	
+	var localizedCurrency: String {
+		let currencyFormatter = NumberFormatter()
+		currencyFormatter.numberStyle = .currency
+		guard let number = Double(self), let currency = currencyFormatter.string(from: NSNumber(value: number)) else {
+			return self
+		}
+		return currency
+	}
+	
+	var formattedPhone: String {
+		var formatted = String()
+		for (index, value) in self.characters.enumerated() {
+			switch index {
+			case 0:
+				formatted.append("(")
+			case 2:
+				formatted.append(")")
+			default:
+				break
+			}
+			formatted.append(value)
+		}
+		return formatted
+	}
+	
+	var unformattedPhone: String {
+		return self.replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: "")
+	}
+	
+}
+
+// Terms and Conditions
+extension String {
+	
+	var htmlAttributedString: NSAttributedString? {
+		guard let data = data(using: .utf8) else { return nil }
+		do {
+			return try NSAttributedString(data: data,
+										  options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType,
+													NSCharacterEncodingDocumentAttribute: String.Encoding.utf8.rawValue],
+										  documentAttributes: nil)
+		} catch {
+			return  nil
+		}
+	}
+}
+
+
+
